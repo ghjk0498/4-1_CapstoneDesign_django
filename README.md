@@ -1,2 +1,4 @@
 # 4-1_CapstoneDesign_django
-[anomaly_detector_bypark branch was created by Harry-PARK]
+
+# 서버 실행법
+- 명령프롬프트 : python manage.py runserver
