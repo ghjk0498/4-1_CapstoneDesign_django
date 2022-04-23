@@ -53,36 +53,12 @@ def request_anomaly(request):
         print('Error code: {}'.format(e.error.code), 'Error message: {}'.format(e.error.message))
     except Exception as e:
         print(e)
-
+    print(response)
     if response.is_anomaly:
         print('The latest point is detected as anomaly.')
     else:
         print('The latest point is not detected as anomaly.')
-
-
-if __name__ == '__main__':
-    # loop = asyncio.get_event_loop()
-    # Run the main method.
-    # loop.run_until_complete(main())
-    client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
-    print(client)
-    series = []
-    data_file = pd.read_csv("Anomaly Simulation.csv", parse_dates=[0])
-    for index, row in data_file.iterrows():
-        series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
-        if index > 12:
-            print("Call Method")
-            request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
-            request_anomaly(request)
-        if index > 100:
-            break
-
-
-
-
-
-
-
+    return response
 
 
 def anomaly_simulation():
@@ -100,16 +76,53 @@ def anomaly_simulation():
     data[9000] = 210
     data[7500] = 35
 
-    index = pd.date_range(start="2022-04-11 11:00:00", end=f"2022-04-11 1{4}:00:00", periods=n)
-    index = index.strftime("%Y-%m-%d %H:%M:%S")
+    # end time must consider period parameter.
+    index = pd.date_range(start="2022-04-23 15:00:00 UTC +0900", end=f"2022-04-23 1{8}:00:00 UTC +0900", periods=n)
+    index = index.strftime("%Y-%m-%d %H:%M:%S %Z %z")
     print(index)
 
     df = pd.DataFrame(data={
-        "data": data
+    "data": data
     },
-        index=index)
+    index=index)
     print(df.head())
     df.plot()
     plt.show()
 
-    df.to_csv("Anomaly Simulation.csv")
+    df.to_csv("Anomaly Simulation with tzinfo.csv")
+
+
+if __name__ == '__main__':
+    # loop = asyncio.get_event_loop()
+    # Run the main method.
+    # loop.run_until_complete(main())
+
+    client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
+    print(client)
+    series = []
+    results = []
+    data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=[0])
+    for index, row in data_file.iterrows():
+        series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
+        if index > 1441:
+            print("Call Method")
+            print(f"Real Value : {row[1]}")
+            request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
+            response = request_anomaly(request)
+            series.pop(0)
+            results.append({
+                "date":row[0],
+                "value":row[1],
+                "is_anomaly" : response.is_anomaly
+            })
+        if index > 1500:
+            print(results)
+            break
+
+
+
+
+
+
+
+
