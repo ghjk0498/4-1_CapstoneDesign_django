@@ -97,6 +97,7 @@ if __name__ == '__main__':
     # Run the main method.
     # loop.run_until_complete(main())
 
+    #This sentence is for commit
     client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
     print(client)
     series = []
