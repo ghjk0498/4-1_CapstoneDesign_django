@@ -1,4 +1,9 @@
 # 4-1_CapstoneDesign_django
 
-# 서버 실행법
-- 명령프롬프트 : python manage.py runserver
+# 가상환경 설정
+- $ conda env create -f capstone.yaml
+- $ conda activate capstone
+
+
+# 서버 실행
+- $ python manage.py runserver
