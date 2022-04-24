@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',  # CORS
     'rest_framework',
     'for_spring',
     'django.contrib.admin',
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # CORS
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +57,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS 관련 추가
+CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:8080', 'http://localhost:8080']
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'django_spring.urls'
 
