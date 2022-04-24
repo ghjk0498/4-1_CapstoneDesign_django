@@ -4,26 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="193a49fd-b9e6-4590-951b-4ac2255cf865" name="Changes" comment="change django SECRET_KEY and hide key">
-      <change afterPath="$PROJECT_DIR$/for_spring/manipulation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/for_spring/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/for_spring/serializers.py" afterDir="false" />
+    <list default="true" id="353c324f-3239-4e8b-b55d-e5fd43cf5151" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/azure_eventhub_reciever/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/azure_eventhub_reciever/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_spring/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_spring/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/for_spring/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/for_spring/urls.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectId" id="28EYAzNIY3u5QNJX4Ocy7gBomJT" />
+  <component name="ProjectId" id="28EgBZAUPUvcpHyImaxtwdSwLfZ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -31,27 +26,22 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/django_spring" />
-  </component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\User\Documents\Git\4-1_CapstoneDesign_django\django_spring" />
-    </key>
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/azure_eventhub_reciever/main.py" />
   </component>
   <component name="RunManager">
-    <configuration name="manipulation" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="4-1_CapstoneDesign_django" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="C:\Users\User\anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/for_spring" />
+      <option name="SDK_HOME" value="C:\Users\User\anaconda3\envs\capstone\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/azure_eventhub_reciever" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/for_spring/manipulation.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/azure_eventhub_reciever/main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -64,35 +54,12 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="193a49fd-b9e6-4590-951b-4ac2255cf865" name="Changes" comment="" />
-      <created>1650783075406</created>
+      <changelist id="353c324f-3239-4e8b-b55d-e5fd43cf5151" name="Changes" comment="" />
+      <created>1650787023890</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1650783075406</updated>
+      <updated>1650787023890</updated>
     </task>
-    <task id="LOCAL-00001" summary="change django SECRET_KEY and hide key">
-      <created>1650784716033</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1650784716033</updated>
-    </task>
-    <option name="localTasksCounter" value="2" />
     <servers />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="change django SECRET_KEY and hide key" />
-    <option name="LAST_COMMIT_MESSAGE" value="change django SECRET_KEY and hide key" />
   </component>
 </project>
