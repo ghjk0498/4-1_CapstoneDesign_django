@@ -51,12 +51,19 @@ async def main():
 def request_anomaly(request):
     print('Detecting the anomaly status of the latest data point.')
 
+    response = None
     try:
         response = client.detect_last_point(request)
+    except KeyboardInterrupt as e:
+        pass
     except AnomalyDetectorError as e:
         print('Error code: {}'.format(e.error.code), 'Error message: {}'.format(e.error.message))
     except Exception as e:
         print(e)
+
+    if response is None:
+        return 'exit'
+
     print(response)
     if response.is_anomaly:
         print('The latest point is detected as anomaly.')
@@ -86,14 +93,14 @@ def anomaly_simulation():
     print(index)
 
     df = pd.DataFrame(data={
-    "data": data
-    },
-    index=index)
+        'time': index,
+        'data': data
+    })
     print(df.head())
     df.plot()
     plt.show()
 
-    df.to_csv("Anomaly Simulation with tzinfo.csv")
+    df.to_csv("Anomaly Simulation with tzinfo.csv", index=False)
 
 
 if __name__ == '__main__':
@@ -108,8 +115,7 @@ if __name__ == '__main__':
     print(client)
     series = []
     results = []
-    data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=[0])
-    data_file.columns.values[0] = 'time'
+    data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=['time'], index_col=False)
     data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     for index, row in data_file.iterrows():
         series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
@@ -118,6 +124,11 @@ if __name__ == '__main__':
             print(f"Real Value : {row[1]}")
             request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
             response = request_anomaly(request)
+
+            if response == 'exit':
+                print('exit')
+                break
+
             series.pop(0)
             results.append({
                 "date":row[0],
