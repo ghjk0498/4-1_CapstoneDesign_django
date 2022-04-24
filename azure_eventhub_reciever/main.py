@@ -97,6 +97,7 @@ def anomaly_simulation():
 
 
 if __name__ == '__main__':
+    # anomaly_simulation()
     # loop = asyncio.get_event_loop()
     # Run the main method.
     # loop.run_until_complete(main())
@@ -108,6 +109,8 @@ if __name__ == '__main__':
     series = []
     results = []
     data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=[0])
+    data_file.columns.values[0] = 'time'
+    data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     for index, row in data_file.iterrows():
         series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
         if index > 1441:
@@ -124,12 +127,3 @@ if __name__ == '__main__':
         if index > 1500:
             print(results)
             break
-
-
-
-
-
-
-
-
-
