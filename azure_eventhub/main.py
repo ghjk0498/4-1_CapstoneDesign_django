@@ -1,20 +1,24 @@
 import asyncio
 import random
 import time
-
+import json
 from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub import EventData
 import datetime
+
+
+with open("../key_value.keys") as f:
+    keys = json.load(f)
 
 
 async def run(data):
     # Create a producer client to send messages to the event hub.
     # Specify a connection string to your event hubs namespace and
     # the event hub name.
-    conn_str = "Endpoint=sb://cdeventhub.servicebus.windows.net/;SharedAccessKeyName=connection_string;SharedAccessKey=Qbc6XkNXktYkQ7oiloLSef6ePOI74TA7U67BkwU4NQ4=;EntityPath=eventhub_stream"
-    eventhub_str = "eventhub_stream"
-    producer = EventHubProducerClient.from_connection_string(conn_str=conn_str,
-                                                             eventhub_name=eventhub_str)
+    eventhub_conn_str = keys["eventhub_conn_str"]
+    eventhub_name = keys["eventhub_name"]
+    producer = EventHubProducerClient.from_connection_string(conn_str=eventhub_conn_str,
+                                                             eventhub_name=eventhub_name)
 
     task = asyncio.create_task(data_generator(data))
 

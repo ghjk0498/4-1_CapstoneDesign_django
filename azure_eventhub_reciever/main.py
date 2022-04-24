@@ -4,7 +4,7 @@ import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import json
 from azure.ai.anomalydetector import AnomalyDetectorClient
 from azure.ai.anomalydetector.models import TimeSeriesPoint, DetectRequest, TimeGranularity, AnomalyDetectorError
 from azure.core.credentials import AzureKeyCredential
@@ -12,8 +12,12 @@ from azure.core.credentials import AzureKeyCredential
 from azure.eventhub.aio import EventHubConsumerClient
 from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 
-anomaly_detector_key = "b4751ab416f84b1da1e53a5296d5dd8f"
-anomaly_detector_endpoint = "https://anomalydetector2022.cognitiveservices.azure.com/"
+
+with open("../key_value.keys") as f:
+    keys = json.load(f)
+
+anomaly_detector_key = keys["anomaly_detector_key"]
+anomaly_detector_endpoint = keys["anomaly_detector_endpoint"]
 
 async def on_event(partition_context, event):
     # Print the event data.
@@ -28,16 +32,16 @@ async def on_event(partition_context, event):
 
 async def main():
     # Create an Azure blob checkpoint store to store the checkpoints.
-    blob_conn_str = "DefaultEndpointsProtocol=https;AccountName=cdstorageaccount2022;AccountKey=E2M/nwaW/MLOkqHCuLhUp2+p12uYiK8QhDP9vDGmfwwWDn4jwfuz0tKbkuOUQpWvaIVZz6hYUVVuxhrXrVKf5Q==;EndpointSuffix=core.windows.net"
-    blob_container_name = "blobeventhubstream"
+    blob_conn_str = keys["blob_conn_str"]
+    blob_container_name = keys["blob_container_name"]
     checkpoint_store = BlobCheckpointStore.from_connection_string(blob_conn_str, blob_container_name)
 
     # Create a consumer client for the event hub.
-    conn_str = "Endpoint=sb://cdeventhub.servicebus.windows.net/;SharedAccessKeyName=connection_string;SharedAccessKey=Qbc6XkNXktYkQ7oiloLSef6ePOI74TA7U67BkwU4NQ4=;EntityPath=eventhub_stream"
-    eventhub_str = "eventhub_stream"
-    client = EventHubConsumerClient.from_connection_string(conn_str,
+    eventhub_conn_str = keys["eventhub_conn_str"]
+    eventhub_name = keys["eventhub_name"]
+    client = EventHubConsumerClient.from_connection_string(eventhub_conn_str,
                                                            consumer_group="$Default",
-                                                           eventhub_name=eventhub_str,
+                                                           eventhub_name=eventhub_name,
                                                            checkpoint_store=checkpoint_store)
     async with client:
         # Call the receive method. Read from the beginning of the partition (starting_position: "-1")
@@ -97,6 +101,7 @@ if __name__ == '__main__':
     # Run the main method.
     # loop.run_until_complete(main())
 
+
     #This sentence is for commit
     client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
     print(client)
@@ -119,6 +124,7 @@ if __name__ == '__main__':
         if index > 1500:
             print(results)
             break
+
 
 
 
