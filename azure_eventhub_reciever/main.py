@@ -49,7 +49,7 @@ async def main():
 
 
 def request_anomaly(request):
-    print('Detecting the anomaly status of the latest data point.')
+    #print('Detecting the anomaly status of the latest data point.')
 
     response = None
     try:
@@ -64,11 +64,12 @@ def request_anomaly(request):
     if response is None:
         return 'exit'
 
-    print(response)
+    #print(response)
     if response.is_anomaly:
         print('The latest point is detected as anomaly.')
     else:
-        print('The latest point is not detected as anomaly.')
+        pass
+        #print('The latest point is not detected as anomaly.')
     return response
 
 
@@ -78,7 +79,8 @@ def anomaly_simulation():
     mean = 100
 
     data = [(mean - std) + random.randint(0, std * 2) for i in range(n)]
-    data[4000] = 200
+    data[1299] = 200
+    data[1300] = 250
     data[4500] = 40
     data[6000] = 200
     data[5500] = 35
@@ -110,18 +112,27 @@ if __name__ == '__main__':
     # loop.run_until_complete(main())
 
 
+
+
+    anomaly_simulation()
     #This sentence is for commit
     client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
     print(client)
+    weight = [1, 1, 1, 1]
+    raw_data = [1, 1, 1, 1]
     series = []
     results = []
     data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=['time'], index_col=False)
     data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     for index, row in data_file.iterrows():
-        series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
+        raw_data.append(row[1])
+        #caution! it's not an exponential
+        exp_value = int(sum([weight[i] * raw_data[i] for i in range(-4, -1, 1)]) / 4)
+
+        print(exp_value)
+
+        series.append(TimeSeriesPoint(timestamp=row[0], value=exp_value))
         if index > 1441:
-            print("Call Method")
-            print(f"Real Value : {row[1]}")
             request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
             response = request_anomaly(request)
 
@@ -131,10 +142,16 @@ if __name__ == '__main__':
 
             series.pop(0)
             results.append({
-                "date":row[0],
-                "value":row[1],
-                "is_anomaly" : response.is_anomaly
+                "date": row[0],
+                "value": row[1],
+                "is_anomaly": response.is_anomaly
             })
+            if response.is_anomaly is True:
+                print(f"Anomaly Detected {response}")
+
         if index > 1500:
-            print(results)
+            print(f"results: {results}")
+            for r in results:
+                if r["is_anomaly"] is True:
+                    print(r)
             break
