@@ -13,21 +13,39 @@ from azure.eventhub.aio import EventHubConsumerClient
 from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 
 
-with open("../key_value.keys") as f:
-    keys = json.load(f)
-
-anomaly_detector_key = keys["anomaly_detector_key"]
-anomaly_detector_endpoint = keys["anomaly_detector_endpoint"]
-
 async def on_event(partition_context, event):
-    # Print the event data.
+    # Save new event info
+    event_info = event.body_as_str(encoding='UTF-8')
+    s = str(event_info)
+    time = s[s.find(":") + 2: s.find(";")]
+    value = int(float(s[s.rfind(":") + 2:]))
+
+
+
     print(f"Received the event: \"{event.body_as_str(encoding='UTF-8')}\" "
           f" Arrived Time : {datetime.datetime.now()} "
-          f"from the partition with ID: \"{ partition_context.partition_id}\"")
+          f"from the partition with ID: \"{partition_context.partition_id}\"")
+
+    ema_value = series_update(data, time, value, limit_n=1441)
+    response = read_and_request_anomaly()
+
+
+    dataframe_update(data, time, ema_value, response.is_anomaly)
+
+
+    if response.is_anomaly is True:
+        print(f"Anomaly Detected {response}")
 
     # Update the checkpoint so that the program doesn't read the events
     # that it has already read when you run it next time.
+
     await partition_context.update_checkpoint(event)
+
+def read_and_request_anomaly():
+    # request anomaly
+    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
+    response = request_anomaly(request)
+    return response
 
 
 async def main():
@@ -35,7 +53,6 @@ async def main():
     blob_conn_str = keys["blob_conn_str"]
     blob_container_name = keys["blob_container_name"]
     checkpoint_store = BlobCheckpointStore.from_connection_string(blob_conn_str, blob_container_name)
-
     # Create a consumer client for the event hub.
     eventhub_conn_str = keys["eventhub_conn_str"]
     eventhub_name = keys["eventhub_name"]
@@ -49,8 +66,9 @@ async def main():
 
 
 def request_anomaly(request):
-    #print('Detecting the anomaly status of the latest data point.')
-
+    print("request_anomaly")
+    # print('Detecting the anomaly status of the latest data point.')
+    client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
     response = None
     try:
         response = client.detect_last_point(request)
@@ -64,12 +82,12 @@ def request_anomaly(request):
     if response is None:
         return 'exit'
 
-    #print(response)
+    # print(response)
     if response.is_anomaly:
         print('The latest point is detected as anomaly.')
     else:
         pass
-        #print('The latest point is not detected as anomaly.')
+        # print('The latest point is not detected as anomaly.')
     return response
 
 
@@ -90,13 +108,14 @@ def anomaly_simulation():
     data[7500] = 35
 
     # end time must consider period parameter.
-    index = pd.date_range(start="2022-04-23 15:00:00 UTC +0900", end=f"2022-04-23 1{8}:00:00 UTC +0900", periods=n)
+    index = pd.date_range(start="2022-04-23T15:00:00Z", end=f"2022-04-23T1{8}:00:00Z", periods=n)
     index = index.strftime("%Y-%m-%d %H:%M:%S %Z %z")
     print(index)
 
     df = pd.DataFrame(data={
         'time': index,
-        'data': data
+        'value': data,
+        "is_anomaly": False
     })
     print(df.head())
     df.plot()
@@ -105,53 +124,49 @@ def anomaly_simulation():
     df.to_csv("Anomaly Simulation with tzinfo.csv", index=False)
 
 
-if __name__ == '__main__':
-    # anomaly_simulation()
-    # loop = asyncio.get_event_loop()
-    # Run the main method.
-    # loop.run_until_complete(main())
-
-
-
-
-    anomaly_simulation()
-    #This sentence is for commit
-    client = AnomalyDetectorClient(AzureKeyCredential(anomaly_detector_key), anomaly_detector_endpoint)
-    print(client)
-    weight = [1, 1, 1, 1]
-    raw_data = [1, 1, 1, 1]
+def series_init(df, w):
     series = []
-    results = []
-    data_file = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=['time'], index_col=False)
-    data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-    for index, row in data_file.iterrows():
-        raw_data.append(row[1])
-        #caution! it's not an exponential
-        exp_value = int(sum([weight[i] * raw_data[i] for i in range(-4, -1, 1)]) / 4)
+    for index, row in df.iterrows():
+        # caution! it's not an exponential
+        series.append(TimeSeriesPoint(timestamp=row[0], value=row[1]))
+    return series
 
-        print(exp_value)
 
-        series.append(TimeSeriesPoint(timestamp=row[0], value=exp_value))
-        if index > 1441:
-            request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
-            response = request_anomaly(request)
+def series_update(df, time, new_value, limit_n=1441):
+    print("series_update")
+    temp_list = [weight[i] * series[i].value for i in range(-4, 0, 1)] + [new_value]
+    temp_avg = sum(temp_list + [new_value]) / 5
+    ema_value = int(temp_avg)
 
-            if response == 'exit':
-                print('exit')
-                break
+    series.append(TimeSeriesPoint(timestamp=time, value=ema_value))
 
-            series.pop(0)
-            results.append({
-                "date": row[0],
-                "value": row[1],
-                "is_anomaly": response.is_anomaly
-            })
-            if response.is_anomaly is True:
-                print(f"Anomaly Detected {response}")
+    if len(series) >= limit_n:
+        series.pop(0)
+    return ema_value
 
-        if index > 1500:
-            print(f"results: {results}")
-            for r in results:
-                if r["is_anomaly"] is True:
-                    print(r)
-            break
+def dataframe_update(df, time, ema_value, is_anomaly):
+    df.append({
+        "time": time,
+        "value": ema_value,
+        "is_anomaly": is_anomaly
+    })
+
+# Configuration
+with open("../key_value.keys") as f:
+    keys = json.load(f)
+
+anomaly_detector_key = keys["anomaly_detector_key"]
+anomaly_detector_endpoint = keys["anomaly_detector_endpoint"]
+weight = [1, 1, 1, 1]  # weight for EMA
+# data load
+data = pd.read_csv("Anomaly Simulation with tzinfo.csv", parse_dates=['time'], index_col=False)  # past data
+series = series_init(data, weight)  # list to send Azure Anomaly Detector
+
+if __name__ == '__main__':
+    print("receiver")
+    # make event loop
+    loop = asyncio.get_event_loop()
+    # Run the main method.
+    loop.run_until_complete(main())
+
+    # data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')

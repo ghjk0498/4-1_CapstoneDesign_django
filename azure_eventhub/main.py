@@ -60,8 +60,9 @@ async def data_generator(data):
 
 if __name__ == '__main__':
 
-
+    print("producer")
     data = []
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(data))
     #loop.run_until_complete(run(data))    # if the argument is a coroutine object it is implicity scheduled to run as a asyncio.Task. Return the Future's result or ots exception
