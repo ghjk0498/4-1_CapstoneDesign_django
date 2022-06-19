@@ -4,7 +4,7 @@ from azure_eventhub_reciever import SocketServer
 
 
 
-django = threading.Thread(target=os.system, args=("python manage.py runserver",))
+django = threading.Thread(target=os.system, args=("python manage.py runserver 0.0.0.0:8000",))
 django.daemon = True
 django.start()
 
