@@ -74,6 +74,8 @@ class SocketServer:
         self.server_socket.listen()
         self.server_state = True
 
+        receiver.anomaly_simulation()
+
         thread = threading.Thread(target=self.work)
         thread.setDaemon(True)
         thread.start()

@@ -23,7 +23,7 @@ file_path2 = "MEDIA/Anomaly_Simulation_with_tzinfo_v0.csv"
 # file_path2 = "Anomaly_Simulation_with_tzinfo_v0.csv"
 
 with open("./key_value.keys") as f:
-#with open("../key_value.keys") as f:
+# with open("../key_value.keys") as f:
     keys = json.load(f)
 
 
@@ -77,7 +77,7 @@ def new_value_processor(value_as_row, df, series):
     ema_value = (sum(df["value"].to_list()[-ema_period+1:]) + new_value) / ema_period
 
     series.append(TimeSeriesPoint(timestamp=time, value=ema_value))
-    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND)
+    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=10)
     response = request_anomaly(request)
     print(response)
     print(value_as_row + [ema_value, response.is_anomaly])
@@ -87,7 +87,33 @@ def new_value_processor(value_as_row, df, series):
     df.to_csv(file_path2, index=False)
     return response
 
+def anomaly_simulation():
+    n = 1800
+    std = 15
+    mean = 45
+    data = [(mean - std) + random.randint(0, std * 2) for i in range(n)]
 
+
+    # end time must consider period parameter.
+    start_time = (datetime.datetime.now() - datetime.timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    end_time = (datetime.datetime.now() - datetime.timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    print(start_time, end_time)
+
+    index = pd.date_range(start=start_time, end=end_time, periods=n)
+    index = index.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    df = pd.DataFrame(data={
+        'time': index,
+        'value': data,
+        "ema" : None,
+        "is_anomaly": False
+    })
+    print(df.head())
+    # df.plot()
+    # plt.show()
+
+    df.to_csv(file_path1, index=False)
+    df.to_csv(file_path2, index=False)
 
 
 
@@ -103,7 +129,7 @@ def init_receive():
 def receive(msg, data_file, series):
     ts = msg.split(" ")
     time = ts[0] + "T" + ts[1] + "Z"
-    value = float(ts[2])
+    value = int(float(ts[2]))
     try:
         sensor_data = [time, value]
         new_value_processor(sensor_data, data_file, series)
@@ -111,8 +137,9 @@ def receive(msg, data_file, series):
         print(e)
 
 if __name__ == '__main__':
-    data_file, series = init_receive()
-    receive("2022-06-19 17:15:01 15", data_file, series)
+    pass
+    # data_file, series = init_receive()
+    # receive("2022-06-19 17:15:01 15", data_file, series)
 
 
 
