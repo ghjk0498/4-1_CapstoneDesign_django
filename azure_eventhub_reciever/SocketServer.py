@@ -1,11 +1,10 @@
 # 소켓을 사용하기 위해서는 socket을 import해야 한다.
 import socket, threading
-import receiver
+from azure_eventhub_reciever import receiver
 
 
 class SocketServer:
-
-    def __init__(self, port):
+    def __init__(self, port=9998):
         # 소켓을 만든다.
         self.client_socket = None
         self.data = []
@@ -17,8 +16,7 @@ class SocketServer:
         self.server_socket.bind(('', port))
         self.server_state = False
 
-        self.data_file, self.series = receiver.init_receive()
-
+        # self.data_file, self.series = receiver.init_receive()
 
     # binder함수는 서버에서 accept가 되면 생성되는 socket 인스턴스를 통해
     # client로 부터 데이터를 받으면 echo형태로 재송신하는 메소드이다.
@@ -48,7 +46,7 @@ class SocketServer:
                     self.server_state = False
                     return
                 print(msg)
-                receiver.receive(msg, self.data_file, self.series)
+                # receiver.receive(msg, self.data_file, self.series)
                 print('Received from', addr, msg)
 
                 # 수신된 메시지 앞에 「echo:」 라는 메시지를 붙힌다.

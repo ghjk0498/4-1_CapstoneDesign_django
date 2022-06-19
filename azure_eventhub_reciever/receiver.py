@@ -13,14 +13,20 @@ from azure.core.credentials import AzureKeyCredential
 import socket
 import threading
 import csv
-import SocketServer
-
-from azure.eventhub.aio import EventHubConsumerClient
-from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 
 # Configuration
-with open("../key_value.keys") as f:
+#
+#
+file_path1 = "./azure_eventhub_reciever/test_v1.csv"
+file_path2 = "MEDIA/Anomaly_Simulation_with_tzinfo_v0.csv"
+# file_path1 = "test_v1.csv"
+# file_path2 = "Anomaly_Simulation_with_tzinfo_v0.csv"
+
+with open("./key_value.keys") as f:
+#with open("../key_value.keys") as f:
     keys = json.load(f)
+
+
 
 anomaly_detector_key = keys["anomaly_detector_key"]
 anomaly_detector_endpoint = keys["anomaly_detector_endpoint"]
@@ -77,8 +83,8 @@ def new_value_processor(value_as_row, df, series):
     print(value_as_row + [ema_value, response.is_anomaly])
     df.loc[len(df)] = value_as_row + [ema_value, response.is_anomaly]
 
-    df.to_csv("sensor_v1.csv", index=False)
-    df.to_csv("MEDIA/Anomaly_Simulation_with_tzinfo_v0.csv", index=False)
+    df.to_csv(file_path1, index=False)
+    df.to_csv(file_path2, index=False)
     return response
 
 
@@ -87,7 +93,7 @@ def new_value_processor(value_as_row, df, series):
 
 
 def init_receive():
-    data_file = pd.read_csv("sensor_v1.csv", parse_dates=['time'], index_col=False)  # past data
+    data_file = pd.read_csv(file_path1, parse_dates=['time'], index_col=False)  # past data
     data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     series = series_init(data_file, weight)  # list to send Azure Anomaly Detector
 
@@ -106,7 +112,7 @@ def receive(msg, data_file, series):
 
 if __name__ == '__main__':
     data_file, series = init_receive()
-    receive("2022-06-17 11:50:22 15", data_file, series)
+    receive("2022-06-19 17:15:01 15", data_file, series)
 
 
 
