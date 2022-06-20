@@ -71,18 +71,24 @@ def series_init(df, w):
     return series
 
 
-def new_value_processor(value_as_row, df, series):
+def new_value_processor(value_as_row, df, series, batch_flag=None):
     time, new_value = value_as_row
     ema_value = (sum(df["value"].to_list()[-ema_period+1:]) + new_value) / ema_period
-
+    response = None
     series.append(TimeSeriesPoint(timestamp=time, value=ema_value))
-    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=1)
-    response = request_anomaly(request)
-    print(response)
-    # print(value_as_row + [ema_value, response.is_anomaly])
-    # df.loc[len(df)] = value_as_row + [ema_value, response.is_anomaly]
-    df.loc[len(df)] = value_as_row + [ema_value, "False"]
-    df["is_anomaly"] = ["False"]*4 + response.is_anomaly
+    if batch_flag == 1:
+        print("batch anomaly detection request")
+        request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=1)
+        response = request_anomaly(request)
+        # print(value_as_row + [ema_value, response.is_anomaly])
+        # df.loc[len(df)] = value_as_row + [ema_value, response.is_anomaly]
+        df.loc[len(df)] = value_as_row + [ema_value, "False"]
+        df["is_anomaly"] = ["False"] * 4 + response.is_anomaly
+    else:
+        print("ignore request ")
+        df.loc[len(df)] = value_as_row + [ema_value, "False"]
+        #df["is_anomaly"] = "False"
+
 
     df.to_csv(file_path1, index=False)
     df.to_csv(file_path2, index=False)
@@ -139,19 +145,26 @@ def init_receive(msg=None):
     return data_file, series
 
 # data load
-def receive(msg, data_file, series, flag="start"):
+def receive(msg, data_file, series, batch_flag=None):
     ts = msg.split(" ")
     time = ts[0] + "T" + ts[1] + "Z"
     value = int(float(ts[2]))
 
-    if flag == "start":
-        anomaly_simulation(time)
+    if batch_flag == 1:
+        try:
+            sensor_data = [time, value]
+            new_value_processor(sensor_data, data_file, series, batch_flag = 1)
+        except KeyboardInterrupt as e:
+            print(e)
+    else:
+        try:
+            sensor_data = [time, value]
+            new_value_processor(sensor_data, data_file, series)
+        except KeyboardInterrupt as e:
+            print(e)
 
-    try:
-        sensor_data = [time, value]
-        new_value_processor(sensor_data, data_file, series)
-    except KeyboardInterrupt as e:
-        print(e)
+
+
 
 if __name__ == '__main__':
     # with open("test_v1.csv") as file:

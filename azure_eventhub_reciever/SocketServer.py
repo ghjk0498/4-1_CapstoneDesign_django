@@ -19,6 +19,8 @@ class SocketServer:
         self.data_file, self.series = None, None
         self.flag_start = 3
 
+        self.request_count = 0
+
     # binder함수는 서버에서 accept가 되면 생성되는 socket 인스턴스를 통해
     # client로 부터 데이터를 받으면 echo형태로 재송신하는 메소드이다.
     def binder(self, client_socket, addr):
@@ -59,7 +61,12 @@ class SocketServer:
                     else:
                         print("trash : " + msg)
                         continue
-                receiver.receive(msg, self.data_file, self.series)
+                if self.request_count >= 5:
+                    receiver.receive(msg, self.data_file, self.series, batch_flag=1)
+                    self.request_count = 0
+                else:
+                    receiver.receive(msg, self.data_file, self.series)
+                    self.request_count += 1
                 print('Received from', addr, msg)
 
                 # 수신된 메시지 앞에 「echo:」 라는 메시지를 붙힌다.
