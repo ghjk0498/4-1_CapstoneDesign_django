@@ -15,17 +15,16 @@ import threading
 import csv
 
 # Configuration
-#
-#
+
+
 file_path1 = "./azure_eventhub_reciever/test_v1.csv"
 file_path2 = "MEDIA/Anomaly_Simulation_with_tzinfo_v0.csv"
+with open("./key_value.keys") as f:
+    keys = json.load(f)
 # file_path1 = "test_v1.csv"
 # file_path2 = "Anomaly_Simulation_with_tzinfo_v0.csv"
-
-with open("./key_value.keys") as f:
 # with open("../key_value.keys") as f:
-    keys = json.load(f)
-
+#     keys = json.load(f)
 
 
 anomaly_detector_key = keys["anomaly_detector_key"]
@@ -77,7 +76,7 @@ def new_value_processor(value_as_row, df, series):
     ema_value = (sum(df["value"].to_list()[-ema_period+1:]) + new_value) / ema_period
 
     series.append(TimeSeriesPoint(timestamp=time, value=ema_value))
-    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=10)
+    request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=1)
     response = request_anomaly(request)
     print(response)
     print(value_as_row + [ema_value, response.is_anomaly])
@@ -87,17 +86,23 @@ def new_value_processor(value_as_row, df, series):
     df.to_csv(file_path2, index=False)
     return response
 
-def anomaly_simulation():
+def anomaly_simulation(time=None, value=None):
     n = 1800
     std = 5
-    mean = 25
-    data = [(mean - std) + random.randint(0, std * 2) for i in range(n)]
-
+    mean = 70
 
     # end time must consider period parameter.
     start_time = (datetime.datetime.now() - datetime.timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
     end_time = (datetime.datetime.now() - datetime.timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
-    print(start_time, end_time)
+
+    if time is not None and value is not None:
+        mean = value
+        start_time = (datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ') - datetime.timedelta(seconds=1800)).strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_time = (datetime.datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ') - datetime.timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    print([start_time, end_time], mean)
+
+    data = [(mean - std) + random.randint(0, std * 4) for i in range(n)]
 
     index = pd.date_range(start=start_time, end=end_time, periods=n)
     index = index.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -118,7 +123,13 @@ def anomaly_simulation():
 
 
 
-def init_receive():
+def init_receive(msg=None):
+    if msg:
+        ts = msg.split(" ")
+        time = ts[0] + "T" + ts[1] + "Z"
+        value = int(float(ts[2]))
+        anomaly_simulation(time, value)
+
     data_file = pd.read_csv(file_path1, parse_dates=['time'], index_col=False)  # past data
     data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     series = series_init(data_file, weight)  # list to send Azure Anomaly Detector
@@ -126,10 +137,14 @@ def init_receive():
     return data_file, series
 
 # data load
-def receive(msg, data_file, series):
+def receive(msg, data_file, series, flag="start"):
     ts = msg.split(" ")
     time = ts[0] + "T" + ts[1] + "Z"
     value = int(float(ts[2]))
+
+    if flag == "start":
+        anomaly_simulation(time)
+
     try:
         sensor_data = [time, value]
         new_value_processor(sensor_data, data_file, series)
@@ -137,6 +152,12 @@ def receive(msg, data_file, series):
         print(e)
 
 if __name__ == '__main__':
+    # with open("test_v1.csv") as file:
+    #     reader = csv.reader(file)
+    #     for row in reader:
+    #         print(row)
+    #     print(row[0])
+    #     print(datetime.datetime.strptime(row[0], '%Y-%m-%dT%H:%M:%SZ') - datetime.timedelta(seconds=10))
     pass
     # data_file, series = init_receive()
     # receive("2022-06-19 17:15:01 15", data_file, series)
