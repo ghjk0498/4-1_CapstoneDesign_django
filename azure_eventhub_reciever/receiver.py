@@ -39,8 +39,8 @@ def request_anomaly(request):
 
     response = None
     try:
-        response = client.detect_last_point(request)
-        #response = client.detect_entire_series(request)
+        #response = client.detect_last_point(request)
+        response = client.detect_entire_series(request)
     except KeyboardInterrupt as e:
         pass
     except AnomalyDetectorError as e:
@@ -79,8 +79,10 @@ def new_value_processor(value_as_row, df, series):
     request = DetectRequest(series=series, granularity=TimeGranularity.PER_SECOND, sensitivity=1)
     response = request_anomaly(request)
     print(response)
-    print(value_as_row + [ema_value, response.is_anomaly])
-    df.loc[len(df)] = value_as_row + [ema_value, response.is_anomaly]
+    # print(value_as_row + [ema_value, response.is_anomaly])
+    # df.loc[len(df)] = value_as_row + [ema_value, response.is_anomaly]
+    df.loc[len(df)] = value_as_row + [ema_value, "False"]
+    df["is_anomaly"] = ["False"]*4 + response.is_anomaly
 
     df.to_csv(file_path1, index=False)
     df.to_csv(file_path2, index=False)
