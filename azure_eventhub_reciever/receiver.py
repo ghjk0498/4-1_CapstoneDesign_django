@@ -89,8 +89,8 @@ def new_value_processor(value_as_row, df, series):
 
 def anomaly_simulation():
     n = 1800
-    std = 15
-    mean = 45
+    std = 5
+    mean = 25
     data = [(mean - std) + random.randint(0, std * 2) for i in range(n)]
 
 
