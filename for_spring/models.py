@@ -7,4 +7,4 @@ class Test(models.Model):
     # title = models.CharField(max_length=200)
     # text = models.TextField()
     # image = models.ImageField(default='default_image.jpeg')
-    csv = models.FileField(default='Anomaly Simulation with tzinfo v0.csv')
+    csv = models.CharField(max_length=200, default='http://220.66.115.158:8000/media/Anomaly_Simulation_with_tzinfo_v0.csv')

@@ -9,8 +9,6 @@ from azure.ai.anomalydetector import AnomalyDetectorClient
 from azure.ai.anomalydetector.models import TimeSeriesPoint, DetectRequest, TimeGranularity, AnomalyDetectorError
 from azure.core.credentials import AzureKeyCredential
 
-from azure.eventhub.aio import EventHubConsumerClient
-from azure.eventhub.extensions.checkpointstoreblobaio import BlobCheckpointStore
 
 
 async def on_event(partition_context, event):
@@ -48,21 +46,21 @@ def read_and_request_anomaly():
     return response
 
 
-async def main():
-    # Create an Azure blob checkpoint store to store the checkpoints.
-    blob_conn_str = keys["blob_conn_str"]
-    blob_container_name = keys["blob_container_name"]
-    checkpoint_store = BlobCheckpointStore.from_connection_string(blob_conn_str, blob_container_name)
-    # Create a consumer client for the event hub.
-    eventhub_conn_str = keys["eventhub_conn_str"]
-    eventhub_name = keys["eventhub_name"]
-    client = EventHubConsumerClient.from_connection_string(eventhub_conn_str,
-                                                           consumer_group="$Default",
-                                                           eventhub_name=eventhub_name,
-                                                           checkpoint_store=checkpoint_store)
-    async with client:
-        # Call the receive method. Read from the beginning of the partition (starting_position: "-1")
-        await client.receive(on_event=on_event, starting_position="-1")
+# async def main():
+#     # Create an Azure blob checkpoint store to store the checkpoints.
+#     blob_conn_str = keys["blob_conn_str"]
+#     blob_container_name = keys["blob_container_name"]
+#     #checkpoint_store = BlobCheckpointStore.from_connection_string(blob_conn_str, blob_container_name)
+#     # Create a consumer client for the event hub.
+#     eventhub_conn_str = keys["eventhub_conn_str"]
+#     eventhub_name = keys["eventhub_name"]
+#     #client = EventHubConsumerClient.from_connection_string(eventhub_conn_str,
+#                                                            # consumer_group="$Default",
+#                                                            # eventhub_name=eventhub_name,
+#                                                            # checkpoint_store=checkpoint_store)
+#     async with client:
+#         # Call the receive method. Read from the beginning of the partition (starting_position: "-1")
+#         await client.receive(on_event=on_event, starting_position="-1")
 
 
 def request_anomaly(request):
@@ -92,36 +90,27 @@ def request_anomaly(request):
 
 
 def anomaly_simulation():
-    n = 3600 * 3
-    std = 50
-    mean = 100
-
+    n = 1800
+    std = 15
+    mean = 45
     data = [(mean - std) + random.randint(0, std * 2) for i in range(n)]
-    data[1299] = 200
-    data[1300] = 250
-    data[4500] = 40
-    data[6000] = 200
-    data[5500] = 35
-    data[7000] = 195
-    data[6500] = 38
-    data[9000] = 210
-    data[7500] = 35
+
 
     # end time must consider period parameter.
-    index = pd.date_range(start="2022-04-23T15:00:00Z", end=f"2022-04-23T1{8}:00:00Z", periods=n)
-    index = index.strftime("%Y-%m-%d %H:%M:%S %Z %z")
-    print(index)
+    index = pd.date_range(start="2022-06-19T16:45:00Z", end=f"2022-06-19T17:15:00Z", periods=n)
+    index = index.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     df = pd.DataFrame(data={
         'time': index,
         'value': data,
+        "ema" : None,
         "is_anomaly": False
     })
     print(df.head())
     df.plot()
     plt.show()
 
-    df.to_csv("Anomaly Simulation with tzinfo.csv", index=False)
+    df.to_csv("test_v1.csv", index=False)
 
 
 def series_init(df, w):
@@ -165,8 +154,8 @@ series = series_init(data, weight)  # list to send Azure Anomaly Detector
 if __name__ == '__main__':
     print("receiver")
     # make event loop
-    loop = asyncio.get_event_loop()
+    #loop = asyncio.get_event_loop()
     # Run the main method.
-    loop.run_until_complete(main())
-
+    #loop.run_until_complete(main())
+    anomaly_simulation()
     # data_file['time'] = pd.to_datetime(data_file['time']).dt.strftime('%Y-%m-%dT%H:%M:%SZ')
